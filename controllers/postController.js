@@ -20,7 +20,7 @@ const index = (req, res) => {
     connection.query(sql, (err, results) => {
         if (err) {
             console.error('Error executing query:', err);
-            return res.status(500).json({ error: true, message: "Internal Server Error"});
+            return res.status(500).json({ error: true, message: "Internal Server Error" });
         }
         res.json(results);
     })
@@ -34,12 +34,21 @@ const show = (req, res) => {
     // prepare the query to select a single post by id
     const sql = 'SELECT * FROM posts WHERE id = ?';
 
-    // execute the query 
+    // prepare the sql query to join tags
+    const sqlJoin = `
+    SELECT *
+    FROM posts
+    INNER JOIN post_tag ON post_tag.post_id = posts.id
+    INNER JOIN tags ON post_tag.tag_id = tags.id
+    WHERE posts.id = ?
+    `
+
+    // execute the query to select a single post 
     connection.query(sql, [postId], (err, results) => {
-        
+
         if (err) {
             console.error('Error executing query:', err);
-            return res.status(500).json({ error: true, message: "Internal Server Error"});
+            return res.status(500).json({ error: true, message: "Internal Server Error" });
         }
 
         // check if the post exists (se la lunghezza dell'array è 0, significa che non esiste un post con quell'id)
@@ -47,7 +56,20 @@ const show = (req, res) => {
             return res.status(404).json({ error: true, message: "Post not found" });
         }
 
-        res.json(results[0]);
+        connection.query(sqlJoin, [postId], (err, results) => {
+            if (err) {
+                console.error('Error executing query:', err);
+                return res.status(500).json({ error: true, message: "Internal Server Error" });
+            }
+
+            results[0].tags = results.map(tag => tag.label)
+            // label è il nome della colonna della tabella tags, quindi stiamo mappando
+            // l'array dei risultati e prendendo solo il valore della colonna label 
+            // per ogni tag associato al post
+
+            res.json(results[0]);
+        })    
+
     });
 
     // // find single post by comparing the id
@@ -110,7 +132,7 @@ const update = (req, res) => {
     console.log(thisPost) // chek update post in the terminal
 
     res.json(thisPost)
-    
+
 }
 
 const modify = (req, res) => {
