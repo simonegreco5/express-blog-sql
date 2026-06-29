@@ -70,7 +70,7 @@ const show = (req, res) => {
             res.json(results[0]);
             // usiamo results[0] perchè vogliamo restituire un solo oggetto (singolo post)
             // e non con tutte le righe della query join 
-        }) 
+        })
 
     });
 
@@ -146,26 +146,42 @@ const destroy = (req, res) => {
 
     const postId = parseInt(req.params.id)
     // find single post by comparing the id (same as show)
-    const thisPost = posts.find(post => post.id === postId)
+    // const thisPost = posts.find(post => post.id === postId)
 
-    // if post id not exist, show error 404
-    if (!thisPost) {
-        return res.status(404).json({ error: true, message: "post not found" })
-    }
+    // // if post id not exist, show error 404
+    // if (!thisPost) {
+    //     return res.status(404).json({ error: true, message: "post not found" })
+    // }
 
 
-    // step for DELETE
-    // find the post index from array
-    const index = posts.indexOf(thisPost)
+    // // step for DELETE
+    // // find the post index from array
+    // const index = posts.indexOf(thisPost)
 
-    // now, delete 1 element from 1 position
-    posts.splice(index, 1) // index, in questo caso, sarebbe l'indice di riferimento del post (ovvero l'intero oggetto)
+    // // now, delete 1 element from 1 position
+    // posts.splice(index, 1) // index, in questo caso, sarebbe l'indice di riferimento del post (ovvero l'intero oggetto)
 
-    // show updated list in the terminal
-    console.log(posts)
+    // // show updated list in the terminal
+    // console.log(posts)
 
-    // update the status of server
-    res.status(204).json({ message: "no content" })
+    const sql = 'DELETE FROM posts WHERE id = ?';
+    connection.query(sql, [postId], (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            return res.status(500).json({ error: true, message: "Internal Server Error" });
+        }
+
+        console.log(results) // check the results of the delete query in the terminal
+
+        // check if any rows were affected (if no rows were affected, the post was not found)
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: true, message: "Post not found" });
+        }
+
+        // update the status of server
+        res.status(204).json({ message: "no content" })
+    })
+
 }
 
 module.exports = {
