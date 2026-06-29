@@ -31,15 +31,34 @@ const show = (req, res) => {
 
     const postId = parseInt(req.params.id)
 
-    // find single post by comparing the id
-    const thisPost = posts.find(post => post.id === postId)
+    // prepare the query to select a single post by id
+    const sql = 'SELECT * FROM posts WHERE id = ?';
 
-    // if post id not exist, show error 404
-    if (!thisPost) {
-        return res.status(404).json({ error: true, message: "post not found" })
-    }
+    // execute the query 
+    connection.query(sql, [postId], (err, results) => {
+        
+        if (err) {
+            console.error('Error executing query:', err);
+            return res.status(500).json({ error: true, message: "Internal Server Error"});
+        }
 
-    res.json(thisPost)
+        // check if the post exists (se la lunghezza dell'array è 0, significa che non esiste un post con quell'id)
+        if (results.length === 0) {
+            return res.status(404).json({ error: true, message: "Post not found" });
+        }
+
+        res.json(results[0]);
+    });
+
+    // // find single post by comparing the id
+    // const thisPost = posts.find(post => post.id === postId)
+
+    // // if post id not exist, show error 404
+    // if (!thisPost) {
+    //     return res.status(404).json({ error: true, message: "post not found" })
+    // }
+
+    // res.json(thisPost)
 }
 
 const store = (req, res) => {
@@ -77,7 +96,7 @@ const update = (req, res) => {
 
     // if id post not exist show error 404
     if (!thisPost) {
-        req.status(404).json({ error: true, message: "post not found" })
+        res.status(404).json({ error: true, message: "post not found" })
     }
 
     // update the post properties with the request body data
