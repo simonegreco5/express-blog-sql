@@ -68,7 +68,9 @@ const show = (req, res) => {
             // per ogni tag associato al post
 
             res.json(results[0]);
-        })    
+            // usiamo results[0] perchè vogliamo restituire un solo oggetto (singolo post)
+            // e non con tutte le righe della query join 
+        }) 
 
     });
 
